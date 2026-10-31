@@ -2,7 +2,7 @@
 
 **Jev decides if your PR is safe to merge.** A GitHub Action and CLI that answers one question: can this merge right now?
 
-[![CI](https://github.com/Durable-Quality/safe-to-merge/actions/workflows/ci.yml/badge.svg)](https://github.com/Durable-Quality/safe-to-merge/actions/workflows/ci.yml)
+[![CI](https://github.com/Hiccup-za/safe-to-merge/actions/workflows/ci.yml/badge.svg)](https://github.com/Hiccup-za/safe-to-merge/actions/workflows/ci.yml)
 
 Built by [Durable Quality](https://durableqa.xyz) on [Jev](https://docs.typesafe.ai/) by TypeSafe AI. Not affiliated with TypeSafe AI.
 
@@ -49,7 +49,7 @@ All thresholds are configurable.
 ## Setup (GitHub Action)
 
 1. Get a key at [console.typesafe.ai](https://console.typesafe.ai) → repo secret `TYPESAFE_API_KEY`.
-2. Copy [`examples/safe-to-merge.yml`](examples/safe-to-merge.yml) to `.github/workflows/`. It uses `Durable-Quality/safe-to-merge@main` and runs on Bun.
+2. Copy [`examples/safe-to-merge.yml`](examples/safe-to-merge.yml) to `.github/workflows/`. It uses `Hiccup-za/safe-to-merge@main` and runs on Bun.
 3. Optional: make the `safe-to-merge` status required in branch rules.
 
 It posts a sticky PR comment and a `safe-to-merge` commit status, and waits up to 10 min for other checks first. Re-runs on pushes, reviews, review comments, PR comments and label changes.

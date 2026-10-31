@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: Durable-Quality/safe-to-merge@main
+      - uses: Hiccup-za/safe-to-merge@main
         with:
           typesafe-api-key: ${{ secrets.TYPESAFE_API_KEY }}
           post: comment,status

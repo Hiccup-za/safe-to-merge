@@ -12,9 +12,9 @@
     "start": "bun src/cli.js",
     "site": "bun scripts/serve-site.js"
   },
-  "repository": { "type": "git", "url": "git+https://github.com/Durable-Quality/safe-to-merge.git" },
-  "homepage": "https://github.com/Durable-Quality/safe-to-merge#readme",
-  "bugs": "https://github.com/Durable-Quality/safe-to-merge/issues",
+  "repository": { "type": "git", "url": "git+https://github.com/Hiccup-za/safe-to-merge.git" },
+  "homepage": "https://github.com/Hiccup-za/safe-to-merge#readme",
+  "bugs": "https://github.com/Hiccup-za/safe-to-merge/issues",
   "keywords": ["github-action", "pull-request", "code-review", "merge-gate", "jev", "typesafe"],
   "license": "MIT"
 }
