@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>safe-to-merge — Jev decides if your PR is safe to merge</title>
+<meta name="description" content="Jev decides if your PR is safe to merge. A GitHub Action that turns typed answers from TypeSafe Jev and hard rules in code into one verdict: safe, needs review, or block.">
+<meta name="theme-color" content="#0D0D0D">
+<meta property="og:title" content="safe-to-merge — Jev decides if your PR is safe to merge">
+<meta property="og:description" content="Jev decides if your PR is safe to merge. A GitHub Action that turns typed answers from TypeSafe Jev and hard rules in code into one verdict: safe, needs review, or block.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23F386A1'/%3E%3Cg fill='none' stroke='%230D0D0D' stroke-width='2.4'%3E%3Ccircle cx='11' cy='9' r='3'/%3E%3Ccircle cx='11' cy='23' r='3'/%3E%3Ccircle cx='22' cy='16' r='3'/%3E%3Cpath d='M11 12v8M11 14c0 2.5 2.5 2.5 8 2.5'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#0D0D0D;color:#F5F5F5;font-family:'Schibsted Grotesk',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-underline-offset:3px}
+::selection{background:#F386A1;color:#0D0D0D}
+.btn-pink{transition:background .15s ease,transform .15s ease}.btn-pink:hover{background:#FFFFFF;color:#0D0D0D}.btn-pink:active{transform:translateY(1px)}
+.btn-ghost{transition:background .15s ease,border-color .15s ease}.btn-ghost:hover{background:#1F1F1F;border-color:#3D3D3D;color:#F5F5F5}
+.navlink{text-decoration:none;color:#A0A0A0;transition:color .15s ease}.navlink:hover{color:#F5F5F5}
+.seg{transition:background .15s ease,color .15s ease}.seg:hover{color:#F5F5F5}
+.row{transition:background .15s ease}.row:hover{background:#1C1C1C}
+.row-pink{box-shadow:inset 0 0 0 1px transparent;transition:box-shadow .15s ease}.row-pink:hover{box-shadow:inset 0 0 0 1px #0D0D0D}
+.btn-pink:focus-visible,.btn-ghost:focus-visible,.seg:focus-visible,a:focus-visible{outline:2px solid #F386A1;outline-offset:2px}
+@media (max-width:760px){.hide-sm{display:none}}
+.seg{min-height:30px;padding:0 12px;border:0;border-radius:7px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;cursor:pointer;background:transparent;color:#A0A0A0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+html{scroll-behavior:smooth}
+</style>
+</head>
+<body>
+<div style="min-height: 100%; background: #0D0D0D; color: #F5F5F5">
+
+<!-- NAV -->
+<header style="border-bottom: 1px solid #242424">
+<nav aria-label="Main" style="max-width: 1120px; margin: 0 auto; padding: 14px clamp(16px, 4vw, 32px); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+<a href="#top" style="display: flex; align-items: center; gap: 10px; text-decoration: none">
+<span aria-hidden="true" style="display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: #F386A1"><svg width="16" height="16" viewBox="0 0 22 22" fill="none" stroke="#0D0D0D" stroke-width="2"><circle cx="6" cy="5" r="2.5"></circle><circle cx="6" cy="17" r="2.5"></circle><circle cx="16" cy="11" r="2.5"></circle><path d="M6 7.5v7M6 9c0 2 2 2 7.5 2"></path></svg></span>
+<span style="font-size: 16px; font-weight: 600; letter-spacing: -0.01em">safe-to-merge</span>
+</a>
+<div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap">
+<a class="navlink hide-sm" href="#how" style="font-size: 14px">How it works</a>
+<a class="navlink hide-sm" href="#jev" style="font-size: 14px">Jev</a>
+<a class="navlink hide-sm" href="#install" style="font-size: 14px">Install</a>
+<a class="btn-ghost" href="https://github.com/Durable-Quality/safe-to-merge" style="display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border: 1px solid #2E2E2E; border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none">GitHub<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M4 10L10 4M5 4h5v5" stroke="currentColor" stroke-width="1.6"></path></svg></a>
+</div>
+</nav>
+</header>
+
+<main id="top">
+
+<!-- HERO -->
+<section style="position: relative; overflow: hidden; border-bottom: 1px solid #242424">
+<div style="position: relative; max-width: 1120px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(16px, 4vw, 32px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: clamp(36px, 5vw, 64px); align-items: center">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 22px">
+<h1 style="margin: 0; font-size: clamp(2.75rem, 5.6vw, 4.5rem); line-height: 1; letter-spacing: -0.04em; font-weight: 700; text-wrap: balance"><span style="color: #F386A1">Jev</span> decides if your PR is safe to merge</h1>
+<p style="margin: 0; max-width: 42ch; font-size: 18px; line-height: 1.55; color: #A0A0A0; text-wrap: pretty">Every pull request goes to Jev. Rules in code turn its answers into one verdict: safe, needs review, or block.</p>
+<div style="display: flex; gap: 10px; flex-wrap: wrap">
+<a class="btn-pink" href="#install" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; border-radius: 10px; background: #F386A1; color: #0D0D0D; font-size: 15px; font-weight: 600; text-decoration: none">Add the GitHub Action</a>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #A0A0A0">
+<span>70–500 ms per decision</span><span>&lt;1¢ per PR</span><span>zero dependencies</span>
+</div>
+</div>
+
+<!-- product card -->
+<div style="border: 1px solid #2E2E2E; border-radius: 16px; background: #161616; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(0,0,0,0.7)">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #242424; flex-wrap: wrap">
+<span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #A0A0A0">acme/shop <span style="color: #F5F5F5">#482</span></span>
+<div role="group" aria-label="Example verdict" style="display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: #0D0D0D; border: 1px solid #242424">
+<button class="seg" type="button" data-verdict="safe" aria-pressed="false">safe</button>
+<button class="seg" type="button" data-verdict="review" aria-pressed="false">needs_review</button>
+<button class="seg" type="button" data-verdict="block" aria-pressed="true">block</button>
+</div>
+</div>
+
+<div style="padding: 22px 18px 8px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+<span id="v-icon" aria-hidden="true" style="display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; transition: opacity .2s ease"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path id="v-glyph" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+<p aria-live="polite" style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: #F5F5F5">
+<span id="v-sr" class="sr-only"></span>
+<span id="v-label" aria-hidden="true" style="display: inline-flex; flex-wrap: wrap; column-gap: 0.26em"></span>
+</p>
+<span style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: #F386A1"><span id="v-dot" aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #F386A1"></span><span id="v-status">jev decided</span></span>
+</div>
+<p id="v-empty" hidden style="margin: 0; font-size: 15px; color: #A0A0A0">All rules pass. Jev sees no concerns.</p>
+<ul id="v-reasons" style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px"></ul>
+</div>
+
+<div style="margin-top: 10px; padding: 16px 18px 18px; background: #F386A1; color: #0D0D0D; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; gap: 12px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 500"><span>jev · verdict · choice</span><span>calibrated</span></div>
+<div id="v-bars" style="display: flex; flex-direction: column; gap: 10px"></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- HOW -->
+<section id="how" aria-labelledby="how-h" style="border-bottom: 1px solid #242424">
+<div style="max-width: 1120px; margin: 0 auto; padding: clamp(48px, 6vw, 80px) clamp(16px, 4vw, 32px); display: flex; flex-direction: column; gap: 32px">
+<h2 id="how-h" style="margin: 0; font-size: clamp(1.9rem, 3.2vw, 2.6rem); line-height: 1.05; letter-spacing: -0.035em; font-weight: 700">Code computes, Jev decides</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); grid-auto-rows: auto 1fr; gap: 12px 16px">
+<div style="display: grid; grid-row: span 2; grid-template-rows: subgrid; gap: 12px">
+<p style="margin: 0; font-size: 15px; line-height: 1.5; color: #A0A0A0">Hard rules, checked in code.</p>
+<div style="height: 100%; box-sizing: border-box; border: 1px solid #2E2E2E; border-radius: 16px; background: #161616; padding: 8px">
+<div class="row" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; font-size: 15px">
+<span>Draft or merge conflict</span>
+<span style="flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; background: rgba(242,104,93,0.12); color: #F2685D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #F2685D"></span>block</span>
+</div>
+<div class="row" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; font-size: 15px">
+<span>Changes requested</span>
+<span style="flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; background: rgba(242,104,93,0.12); color: #F2685D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #F2685D"></span>block</span>
+</div>
+<div class="row" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; font-size: 15px">
+<span>Failing check</span>
+<span style="flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; background: rgba(242,104,93,0.12); color: #F2685D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #F2685D"></span>block</span>
+</div>
+<div class="row" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; font-size: 15px">
+<span>Credential added in the diff</span>
+<span style="flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; background: rgba(242,104,93,0.12); color: #F2685D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #F2685D"></span>block</span>
+</div>
+<div class="row" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; font-size: 15px">
+<span>Missing approvals or pending checks</span>
+<span style="flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; background: rgba(232,164,75,0.12); color: #E8A44B; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #E8A44B"></span>needs_review</span>
+</div>
+</div>
+</div>
+<div style="display: grid; grid-row: span 2; grid-template-rows: subgrid; gap: 12px">
+<p style="margin: 0; font-size: 15px; line-height: 1.5; color: #A0A0A0">Judgment calls made by Jev. Jev can raise a flag, never clear a block.</p>
+<div style="height: 100%; box-sizing: border-box; border: 1px solid #F386A1; border-radius: 16px; background: #F386A1; color: #0D0D0D; padding: 8px">
+<div class="row-pink" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; font-size: 15px">
+<span>Review thread is blocking</span>
+<span style="flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #E0412F"></span>block</span>
+</div>
+<div class="row-pink" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; font-size: 15px">
+<span>Verdict is block, confidently</span>
+<span style="flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #E0412F"></span>block</span>
+</div>
+<div class="row-pink" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; font-size: 15px">
+<span>Failing check looks flaky</span>
+<span style="flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #D98A1C"></span>needs_review</span>
+</div>
+<div class="row-pink" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; font-size: 15px">
+<span>High risk or under-tested</span>
+<span style="flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #D98A1C"></span>needs_review</span>
+</div>
+<div class="row-pink" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; font-size: 15px">
+<span>Breaking or security-sensitive</span>
+<span style="flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #D98A1C"></span>needs_review</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- JEV -->
+<section id="jev" aria-labelledby="jev-h" style="border-bottom: 1px solid #242424">
+<div style="max-width: 1120px; margin: 0 auto; padding: clamp(48px, 6vw, 80px) clamp(16px, 4vw, 32px); display: flex; flex-wrap: wrap; gap: 32px 56px; align-items: flex-start">
+<div style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 14px">
+<h2 id="jev-h" style="margin: 0; font-size: clamp(1.9rem, 3.2vw, 2.6rem); line-height: 1.05; letter-spacing: -0.035em; font-weight: 700">What we ask Jev</h2>
+<p style="margin: 0; font-size: 16px; line-height: 1.55; color: #A0A0A0; max-width: 36ch">Jev is TypeSafe AI's System One model. It doesn't write. It answers typed questions with calibrated probabilities.</p>
+<a href="https://docs.typesafe.ai/" style="font-size: 15px; font-weight: 500; color: #F386A1">Read the Jev docs</a>
+</div>
+<ul style="flex: 2 1 560px; min-width: 0; margin: 0; padding: 8px; list-style: none; border: 1px solid #F386A1; border-radius: 16px; background: #F386A1; color: #0D0D0D; display: flex; flex-direction: column">
+<li class="row-pink" style="display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 12px 14px; border-radius: 10px">
+<span style="flex: 0 0 15.5rem; max-width: 100%; display: flex; align-items: center; gap: 10px"><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; font-weight: 600">verdict</span><span style="padding: 2px 9px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600">choice</span></span>
+<span style="flex: 1 1 220px; font-size: 14px; color: #1F1F1F">Safe, needs review, or block?</span>
+</li>
+<li class="row-pink" style="display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 12px 14px; border-radius: 10px">
+<span style="flex: 0 0 15.5rem; max-width: 100%; display: flex; align-items: center; gap: 10px"><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; font-weight: 600">risk</span><span style="padding: 2px 9px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600">score</span></span>
+<span style="flex: 1 1 220px; font-size: 14px; color: #1F1F1F">How risky is this change, trivial to high?</span>
+</li>
+<li class="row-pink" style="display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 12px 14px; border-radius: 10px">
+<span style="flex: 0 0 15.5rem; max-width: 100%; display: flex; align-items: center; gap: 10px"><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; font-weight: 600">tests_adequate</span><span style="padding: 2px 9px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600">noul</span></span>
+<span style="flex: 1 1 220px; font-size: 14px; color: #1F1F1F">Are the changes covered by tests in this PR?</span>
+</li>
+<li class="row-pink" style="display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 12px 14px; border-radius: 10px">
+<span style="flex: 0 0 15.5rem; max-width: 100%; display: flex; align-items: center; gap: 10px"><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; font-weight: 600">breaking_change</span><span style="padding: 2px 9px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600">noul</span></span>
+<span style="flex: 1 1 220px; font-size: 14px; color: #1F1F1F">Will this break behaviour, an API or a schema?</span>
+</li>
+<li class="row-pink" style="display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 12px 14px; border-radius: 10px">
+<span style="flex: 0 0 15.5rem; max-width: 100%; display: flex; align-items: center; gap: 10px"><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; font-weight: 600">sensitive_area</span><span style="padding: 2px 9px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600">noul</span></span>
+<span style="flex: 1 1 220px; font-size: 14px; color: #1F1F1F">Does it touch auth, payments or secrets?</span>
+</li>
+<li class="row-pink" style="display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 12px 14px; border-radius: 10px">
+<span style="flex: 0 0 15.5rem; max-width: 100%; display: flex; align-items: center; gap: 10px"><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; font-weight: 600">blocking</span><span style="padding: 2px 9px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600">noul</span></span>
+<span style="flex: 1 1 220px; font-size: 14px; color: #1F1F1F">Per open thread: must this be resolved first?</span>
+</li>
+<li class="row-pink" style="display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 12px 14px; border-radius: 10px">
+<span style="flex: 0 0 15.5rem; max-width: 100%; display: flex; align-items: center; gap: 10px"><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; font-weight: 600">cause</span><span style="padding: 2px 9px; border-radius: 999px; background: #FFFFFF; color: #0D0D0D; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600">choice</span></span>
+<span style="flex: 1 1 220px; font-size: 14px; color: #1F1F1F">Per failing check: the PR, flaky, infra, or unrelated?</span>
+</li>
+</ul>
+</div>
+</section>
+
+<!-- INSTALL -->
+<section id="install" aria-labelledby="install-h">
+<div style="max-width: 1120px; margin: 0 auto; padding: clamp(48px, 6vw, 80px) clamp(16px, 4vw, 32px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); gap: 32px 56px; align-items: center">
+<div style="display: flex; flex-direction: column; gap: 20px">
+<h2 id="install-h" style="margin: 0; font-size: clamp(1.9rem, 3.2vw, 2.6rem); line-height: 1.05; letter-spacing: -0.035em; font-weight: 700">Live in three steps</h2>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px">
+<li style="display: flex; gap: 14px; align-items: baseline; font-size: 16px; line-height: 1.5"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: #1F1F1F; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #F386A1">1</span><span>Add your Jev key as <code style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; padding: 2px 6px; border-radius: 6px; background: #1F1F1F">TYPESAFE_API_KEY</code>.</span></li>
+<li style="display: flex; gap: 14px; align-items: baseline; font-size: 16px; line-height: 1.5"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: #1F1F1F; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #F386A1">2</span><span>Drop in the workflow.</span></li>
+<li style="display: flex; gap: 14px; align-items: baseline; font-size: 16px; line-height: 1.5"><span style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: #1F1F1F; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #F386A1">3</span><span>Make the <code style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; padding: 2px 6px; border-radius: 6px; background: #1F1F1F">safe-to-merge</code> status required.</span></li>
+</ol>
+<div style="display: flex; gap: 10px; flex-wrap: wrap; padding-top: 4px">
+<a class="btn-pink" href="https://github.com/Durable-Quality/safe-to-merge" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; border-radius: 10px; background: #F386A1; color: #0D0D0D; font-size: 15px; font-weight: 600; text-decoration: none">Get it on GitHub</a>
+</div>
+</div>
+<div style="border: 1px solid #2E2E2E; border-radius: 16px; background: #090909; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #242424; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #A0A0A0">
+<span>.github/workflows/safe-to-merge.yml</span><span style="color: #F386A1">yaml</span>
+</div>
+<pre style="margin: 0; padding: 18px; overflow-x: auto; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.7; color: #CCCCCC">on: [pull_request, pull_request_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  safe-to-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Durable-Quality/safe-to-merge@main
+        with:
+          typesafe-api-key: ${{ secrets.TYPESAFE_API_KEY }}</pre>
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer style="border-top: 1px solid #242424">
+<div style="max-width: 1120px; margin: 0 auto; padding: 22px clamp(16px, 4vw, 32px); display: flex; justify-content: space-between; align-items: center; gap: 10px 24px; flex-wrap: wrap; font-size: 13px; color: #A0A0A0">
+<span>safe-to-merge by Durable Quality · built on <a href="https://docs.typesafe.ai/" style="color: #F386A1">Jev</a> by TypeSafe AI · not affiliated with TypeSafe AI</span>
+<a class="navlink" href="https://github.com/Durable-Quality/safe-to-merge">GitHub</a>
+</div>
+</footer>
+
+</div>
+<script src="site.js" defer></script>
+</body>
+</html>

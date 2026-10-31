@@ -1,0 +1,20 @@
+{
+  "name": "safe-to-merge",
+  "version": "0.1.0",
+  "description": "Jev decides if your PR is safe to merge. Hard rules in code, judgment calls by TypeSafe Jev.",
+  "type": "module",
+  "bin": { "safe-to-merge": "src/cli.js" },
+  "files": ["src", "action.yml"],
+  "packageManager": "bun@1.4.4",
+  "engines": { "bun": ">=1.1" },
+  "scripts": {
+    "test": "bun test",
+    "start": "bun src/cli.js",
+    "site": "bun scripts/serve-site.js"
+  },
+  "repository": { "type": "git", "url": "git+https://github.com/Durable-Quality/safe-to-merge.git" },
+  "homepage": "https://github.com/Durable-Quality/safe-to-merge#readme",
+  "bugs": "https://github.com/Durable-Quality/safe-to-merge/issues",
+  "keywords": ["github-action", "pull-request", "code-review", "merge-gate", "jev", "typesafe"],
+  "license": "MIT"
+}

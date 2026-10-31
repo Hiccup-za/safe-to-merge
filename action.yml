@@ -1,0 +1,49 @@
+name: safe-to-merge
+description: Jev decides if your PR is safe to merge. Hard rules in code, judgment calls by TypeSafe Jev.
+branding:
+  icon: git-merge
+  color: red
+
+inputs:
+  typesafe-api-key:
+    description: TypeSafe API key.
+    required: true
+  github-token:
+    description: Token with pull-requests:write and statuses:write.
+    default: ${{ github.token }}
+  post:
+    description: "Where to report: comma list of comment,status (empty = step summary only)."
+    default: comment,status
+  fail-on:
+    description: "Fail the job on: block | needs_review | never."
+    default: never
+  wait:
+    description: Seconds to wait for other checks to finish before judging.
+    default: "600"
+  pr-number:
+    description: PR number (defaults to the triggering PR).
+    default: ""
+
+outputs:
+  verdict:
+    description: safe | needs_review | block
+    value: ${{ steps.judge.outputs.verdict }}
+  summary:
+    description: One-line reason.
+    value: ${{ steps.judge.outputs.summary }}
+
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@v2
+    - id: judge
+      shell: bash
+      run: bun "${{ github.action_path }}/src/cli.js"
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        TYPESAFE_API_KEY: ${{ inputs.typesafe-api-key }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        INPUT_POST: ${{ inputs.post }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_WAIT: ${{ inputs.wait }}
+        SAFE_TO_MERGE_SELF_CHECK: ${{ github.job }}

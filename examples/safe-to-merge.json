@@ -1,0 +1,11 @@
+{
+  "model": "jev-1.13.0",
+  "minApprovals": 1,
+  "ignoreChecks": ["codecov/*", "Vercel – Preview"],
+  "thresholds": {
+    "blockingComment": 0.7,
+    "risk": 0.67,
+    "testsAdequate": 0.5,
+    "softenCheck": 0.85
+  }
+}

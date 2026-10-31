@@ -1,0 +1,35 @@
+# Copy to .github/workflows/safe-to-merge.yml
+name: safe-to-merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+  pull_request_review:
+    types: [submitted, dismissed]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+  checks: read
+
+concurrency:
+  group: safe-to-merge-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  safe-to-merge:
+    # issue_comment fires for issues too — only run on PRs
+    if: github.event_name != 'issue_comment' || github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: Durable-Quality/safe-to-merge@main
+        with:
+          typesafe-api-key: ${{ secrets.TYPESAFE_API_KEY }}
+          post: comment,status
+          fail-on: never # the commit status is the gate; make it required in branch rules
